@@ -1,18 +1,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: route-validator-role
-  namespace: {{ .Values.namespace }}
-rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: route-validator-clusterrole
-  namespace: {{ .Values.namespace }}
+  name: route-validator-cr
+  namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups: [""]
     resources: ["namespaces"]

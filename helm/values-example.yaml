@@ -2,7 +2,6 @@ image:
   pullPolicy: Always
   repository: itsthatdood/namespaced-route-validator
   tag: latest
-namespace: namespaced-route-validator
 namespaceSelector:
   matchLabels:
     enforce-route-check: 'true'

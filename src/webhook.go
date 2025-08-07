@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
 	routev1 "github.com/openshift/api/route/v1"
+	"go.uber.org/zap"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
-func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface) http.HandlerFunc {
+func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var admissionReview admissionv1.AdmissionReview
 		body, err := io.ReadAll(r.Body)
@@ -66,15 +66,17 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 	selector, err := metav1.LabelSelectorAsSelector(cfg.NamespaceSelector)
 	if err != nil {
 		// Failed to parse label selector, default to allowing
-		log.Printf("Failed to parse namespaceSelector: %v", err)
+		log.Errorf("Failed to parse namespaceSelector: %v", err)
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
-	log.Printf("Parsed selector: %v", selector.String())
+	log.Debugf("cfg: %+v", cfg)
+	log.Debugf("Parsed selector: %v", selector)
 
 	matched := selector.Matches(labels.Set(ns.Labels))
-	log.Printf("Namespace: %s - Matched: %v", ns.Name, matched)
-	log.Printf("Labels: %v", ns.Labels)
+	log.Debugf("Namespace: %s - Matched: %v", ns.Name, matched)
+	log.Debugf("Route: %s", req.Name)
+	log.Debugf("Labels: %v", ns.Labels)
 
 	if !matched {
 		// Namespace labels do not match, skip validation
