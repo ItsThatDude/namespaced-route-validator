@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: route-validator-config
+data:
+  namespaceLabelKey: {{ .Values.namespaceLabelKey }}
+  namespaceLabelValue: {{ .Values.namespaceLabelValue }}

@@ -1,0 +1,25 @@
+image:
+  repository: your-repo/route-validator
+  tag: latest
+  pullPolicy: IfNotPresent
+
+namespaceLabelKey: "enforce-route-check"
+namespaceLabelValue: "true"
+
+replicaCount: 1
+
+service:
+  name: route-validator-service
+  port: 443
+  annotations: {}
+
+# TLS configuration
+tls:
+  existingSecret: ""  # if set, use this existing TLS secret
+  cert: ""            # PEM-encoded cert
+  key: ""             # PEM-encoded key
+
+webhook:
+  name: route-validator.openshift.io
+  failurePolicy: Fail
+  caBundle: ""

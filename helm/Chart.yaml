@@ -1,0 +1,6 @@
+apiVersion: v2
+name: route-admission-controller
+description: A helm chart to deploy the Route Admission Controller
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
