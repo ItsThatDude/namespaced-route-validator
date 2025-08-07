@@ -2,6 +2,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: route-validator-webhook
+  namespace: {{ .Values.namespace }}
 webhooks:
   - name: {{ .Values.webhook.name }}
     rules:

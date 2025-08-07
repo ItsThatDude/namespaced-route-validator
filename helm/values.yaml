@@ -1,3 +1,5 @@
+namespace: namespaced-route-validator
+
 image:
   repository: namespaced-route-validator
   tag: latest
