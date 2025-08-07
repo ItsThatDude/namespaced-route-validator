@@ -6,4 +6,4 @@ metadata:
 data:
   config: |
     namespaceSelector:
-      {{- toYaml .Values.namespaceSelector | nindent 4 }}
+      {{- toYaml .Values.namespaceSelector | nindent 6 }}
