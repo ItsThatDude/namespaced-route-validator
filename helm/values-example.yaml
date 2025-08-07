@@ -1,0 +1,18 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: itsthatdood/namespaced-route-validator
+  tag: latest
+namespace: namespaced-route-validator
+namespaceSelector:
+  enforce-route-check: 'true'
+replicaCount: 1
+service:
+  annotations:
+    service.alpha.openshift.io/serving-cert-secret-name: route-validator-tls
+  name: namespaced-route-validator-service
+  port: 443
+tls:
+  existingSecret: route-validator-tls
+webhook:
+  failurePolicy: Fail
+  name: namespaced-route-validator.openshift.io
