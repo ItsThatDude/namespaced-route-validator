@@ -15,6 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to get cluster config: %v", err)
 	}
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Fatalf("failed to create clientset: %v", err)

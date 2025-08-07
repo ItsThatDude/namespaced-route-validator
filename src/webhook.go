@@ -1,23 +1,23 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
 	routev1 "github.com/openshift/api/route/v1"
 	admissionv1 "k8s.io/api/admission/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var admissionReview admissionv1.AdmissionReview
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "could not read request", http.StatusBadRequest)
 			return
@@ -31,7 +31,7 @@ func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface) http
 		review := admissionv1.AdmissionReview{
 			TypeMeta: admissionReview.TypeMeta,
 		}
-		review.Response = validateRoute(admissionReview.Request, cfg, client)
+		review.Response = validateRoute(r.Context(), admissionReview.Request, cfg, client)
 		review.Response.UID = admissionReview.Request.UID
 
 		respBytes, _ := json.Marshal(review)
@@ -40,7 +40,16 @@ func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface) http
 	}
 }
 
-func validateRoute(req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface) *admissionv1.AdmissionResponse {
+func labelsMatch(selector, labels map[string]string) bool {
+	for key, val := range selector {
+		if v, ok := labels[key]; !ok || v != val {
+			return false
+		}
+	}
+	return true
+}
+
+func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface) *admissionv1.AdmissionResponse {
 	if req.Kind.Kind != "Route" || (req.Operation != admissionv1.Create && req.Operation != admissionv1.Update) {
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
@@ -49,28 +58,27 @@ func validateRoute(req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client
 	if err := json.Unmarshal(req.Object.Raw, &route); err != nil {
 		return &admissionv1.AdmissionResponse{
 			Allowed: false,
-			Result:  &runtime.Status{Message: fmt.Sprintf("could not unmarshal Route object: %v", err)},
+			Result:  &metav1.Status{Message: fmt.Sprintf("could not unmarshal Route object: %v", err)},
 		}
 	}
 
-	ns, err := client.CoreV1().Namespaces().Get(req.Namespace)
+	ns, err := client.CoreV1().Namespaces().Get(ctx, req.Namespace, metav1.GetOptions{})
 	if err != nil {
 		return &admissionv1.AdmissionResponse{
 			Allowed: false,
-			Result:  &runtime.Status{Message: fmt.Sprintf("could not get namespace: %v", err)},
+			Result:  &metav1.Status{Message: fmt.Sprintf("could not get namespace: %v", err)},
 		}
 	}
 
-	labelValue, ok := ns.Labels[cfg.NamespaceLabelKey]
-	if !ok || labelValue != cfg.NamespaceLabelValue {
-		// Namespace not labeled for enforcement
+	if !labelsMatch(cfg.NamespaceSelector, ns.Labels) {
+		// Namespace labels do not match, skip validation
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
 	if !strings.Contains(route.Spec.Host, route.Namespace) {
 		return &admissionv1.AdmissionResponse{
 			Allowed: false,
-			Result: &runtime.Status{
+			Result: &metav1.Status{
 				Message: "route host must include the namespace",
 			},
 		}

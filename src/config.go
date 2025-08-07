@@ -1,32 +1,36 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"os"
 
+	"gopkg.in/yaml.v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 type WebhookConfig struct {
-	NamespaceLabelKey   string
-	NamespaceLabelValue string
+	NamespaceSelector map[string]string `json:"namespaceSelector"`
 }
 
 func LoadConfigFromConfigMap(client kubernetes.Interface, namespace string) (*WebhookConfig, error) {
-	cm, err := client.CoreV1().ConfigMaps(namespace).Get("route-validator-config")
+	ctx := context.TODO()
+	cm, err := client.CoreV1().ConfigMaps(namespace).Get(ctx, "route-validator-config", metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	labelKey := cm.Data["namespaceLabelKey"]
-	labelValue := cm.Data["namespaceLabelValue"]
+	nsSelectorYAML, ok := cm.Data["namespaceSelector"]
+	if !ok || nsSelectorYAML == "" {
+		return nil, fmt.Errorf("namespaceSelector not found in configmap data")
+	}
 
-	if labelKey == "" || labelValue == "" {
-		return nil, fmt.Errorf("configmap missing keys")
+	var selector map[string]string
+	if err := yaml.Unmarshal([]byte(nsSelectorYAML), &selector); err != nil {
+		return nil, fmt.Errorf("failed to parse namespaceSelector: %w", err)
 	}
 
 	return &WebhookConfig{
-		NamespaceLabelKey:   labelKey,
-		NamespaceLabelValue: labelValue,
+		NamespaceSelector: selector,
 	}, nil
 }
