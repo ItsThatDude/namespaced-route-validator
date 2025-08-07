@@ -73,7 +73,8 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 	log.Printf("Parsed selector: %v", selector.String())
 
 	matched := selector.Matches(labels.Set(ns.Labels))
-	log.Printf("Namespace %s labels %v matched? %v", ns.Name, ns.Labels, matched)
+	log.Printf("Namespace: %s - Matched: %v", ns.Name, matched)
+	log.Printf("Labels: %v", ns.Labels)
 
 	if !matched {
 		// Namespace labels do not match, skip validation
