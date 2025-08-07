@@ -83,7 +83,7 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
-	if !strings.Contains(route.Spec.Host, route.Namespace) {
+	if !hasValidHostnameSuffix(&route) {
 		return &admissionv1.AdmissionResponse{
 			Allowed: false,
 			Result: &metav1.Status{
@@ -93,4 +93,11 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 	}
 
 	return &admissionv1.AdmissionResponse{Allowed: true}
+}
+
+func hasValidHostnameSuffix(route *routev1.Route) bool {
+	hostname := route.Spec.Host
+	nsSuffix := "-" + route.Namespace + "."
+
+	return strings.Contains(hostname, nsSuffix)
 }
