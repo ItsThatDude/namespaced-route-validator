@@ -4,4 +4,4 @@ metadata:
   name: route-validator-config
 data:
   namespaceSelector:
-    enforce-route-namespace: ""
+    {{- toYaml ".values.namespaceSelector" | nindent 4 }}
