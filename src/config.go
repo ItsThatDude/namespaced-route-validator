@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,6 +15,19 @@ import (
 // WebhookConfig holds the unmarshalled structure from the config map
 type WebhookConfig struct {
 	NamespaceSelector *metav1.LabelSelector `yaml:"namespaceSelector"`
+}
+
+func LoadConfigFromFile(path string) (*WebhookConfig, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg WebhookConfig
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
 }
 
 // LoadConfigFromConfigMap reads and parses the config from the ConfigMap
@@ -28,7 +43,10 @@ func LoadConfigFromConfigMap(client kubernetes.Interface, namespace string) (*We
 		return nil, fmt.Errorf("config not found in ConfigMap data")
 	}
 
-	log.Printf("Raw config YAML:\n%s", rawConfig)
+	fmt.Println("Raw YAML lines:")
+	for i, line := range strings.Split(rawConfig, "\n") {
+		fmt.Printf("%2d: %q\n", i+1, line)
+	}
 
 	var cfg WebhookConfig
 	if err := yaml.Unmarshal([]byte(rawConfig), &cfg); err != nil {

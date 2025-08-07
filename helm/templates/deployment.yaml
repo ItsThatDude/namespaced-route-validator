@@ -23,6 +23,9 @@ spec:
             - name: tls-certs
               mountPath: /certs
               readOnly: true
+            - name: config
+              mountPath: /etc/route-validator
+              readOnly: true
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -33,3 +36,6 @@ spec:
         - name: tls-certs
           secret:
             secretName: {{ .Values.tls.existingSecret | default "route-validator-tls" }}
+        - name: config
+          configMap:
+            name: route-validator-config

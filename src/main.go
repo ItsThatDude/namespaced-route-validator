@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -21,7 +20,8 @@ func main() {
 		log.Fatalf("failed to create clientset: %v", err)
 	}
 
-	cfg, err := LoadConfigFromConfigMap(clientset, os.Getenv("POD_NAMESPACE"))
+	//cfg, err := LoadConfigFromConfigMap(clientset, os.Getenv("POD_NAMESPACE"))
+	cfg, err := LoadConfigFromFile("/etc/route-validator/config.yaml")
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
