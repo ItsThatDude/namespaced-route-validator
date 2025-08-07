@@ -6,7 +6,11 @@ image:
   pullPolicy: IfNotPresent
 
 namespaceSelector:
-  enforce-route-check: "true"
+  matchLabels:
+    enforce-route-check: "true"
+# matchExpressions:
+#   - key: tenant
+#     operator: Exists
 
 replicaCount: 1
 

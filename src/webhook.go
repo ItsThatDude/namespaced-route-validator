@@ -11,6 +11,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -70,7 +71,13 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 		}
 	}
 
-	if !labelsMatch(cfg.NamespaceSelector, ns.Labels) {
+	selector, err := metav1.LabelSelectorAsSelector(cfg.NamespaceSelector)
+	if err != nil {
+		// Failed to parse label selector, default to allowing
+		return &admissionv1.AdmissionResponse{Allowed: true}
+	}
+
+	if !selector.Matches(labels.Set(ns.Labels)) {
 		// Namespace labels do not match, skip validation
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 type WebhookConfig struct {
-	NamespaceSelector map[string]string `json:"namespaceSelector"`
+	NamespaceSelector *metav1.LabelSelector `yaml:"namespaceSelector"`
 }
 
 func LoadConfigFromConfigMap(client kubernetes.Interface, namespace string) (*WebhookConfig, error) {
@@ -25,12 +25,12 @@ func LoadConfigFromConfigMap(client kubernetes.Interface, namespace string) (*We
 		return nil, fmt.Errorf("namespaceSelector not found in configmap data")
 	}
 
-	var selector map[string]string
+	var selector metav1.LabelSelector
 	if err := yaml.Unmarshal([]byte(nsSelectorYAML), &selector); err != nil {
 		return nil, fmt.Errorf("failed to parse namespaceSelector: %w", err)
 	}
 
 	return &WebhookConfig{
-		NamespaceSelector: selector,
+		NamespaceSelector: &selector,
 	}, nil
 }
