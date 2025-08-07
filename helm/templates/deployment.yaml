@@ -28,7 +28,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          serviceAccountName: route-validator
+      serviceAccountName: route-validator
       volumes:
         - name: tls-certs
           secret:
