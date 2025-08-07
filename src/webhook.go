@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -41,15 +42,6 @@ func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface) http
 	}
 }
 
-func labelsMatch(selector, labels map[string]string) bool {
-	for key, val := range selector {
-		if v, ok := labels[key]; !ok || v != val {
-			return false
-		}
-	}
-	return true
-}
-
 func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface) *admissionv1.AdmissionResponse {
 	if req.Kind.Kind != "Route" || (req.Operation != admissionv1.Create && req.Operation != admissionv1.Update) {
 		return &admissionv1.AdmissionResponse{Allowed: true}
@@ -74,10 +66,16 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 	selector, err := metav1.LabelSelectorAsSelector(cfg.NamespaceSelector)
 	if err != nil {
 		// Failed to parse label selector, default to allowing
+		log.Printf("Failed to parse namespaceSelector: %v", err)
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
 
-	if !selector.Matches(labels.Set(ns.Labels)) {
+	log.Printf("Parsed selector: %v", selector.String())
+
+	matched := selector.Matches(labels.Set(ns.Labels))
+	log.Printf("Namespace %s labels %v matched? %v", ns.Name, ns.Labels, matched)
+
+	if !matched {
 		// Namespace labels do not match, skip validation
 		return &admissionv1.AdmissionResponse{Allowed: true}
 	}
