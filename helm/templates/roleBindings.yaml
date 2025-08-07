@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: route-validator-rb
+  namespace: {{ .Values.namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: route-validator
+roleRef:
+  kind: Role
+  name: route-validator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: route-validator-crb
+subjects:
+  - kind: ServiceAccount
+    name: route-validator
+    namespace: {{ .Values.namespace }}
+roleRef:
+  kind: ClusterRole
+  name: route-validator-clusterrole
+  apiGroup: rbac.authorization.k8s.io
