@@ -1,11 +1,12 @@
-image:
-  pullPolicy: Always
-  repository: itsthatdood/namespaced-route-validator
-  tag: latest
+deployment:
+  replicaCount: 1
+  image:
+    pullPolicy: Always
+    repository: itsthatdood/namespaced-route-validator
+    tag: latest
 namespaceSelector:
   matchLabels:
     enforce-route-check: 'true'
-replicaCount: 1
 service:
   annotations:
     service.alpha.openshift.io/serving-cert-secret-name: route-validator-tls
