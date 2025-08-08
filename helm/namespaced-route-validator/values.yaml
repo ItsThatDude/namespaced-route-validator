@@ -1,21 +1,21 @@
 # Deployment Configuration
 deployment:
-  # - Specify the replica count for the deployment
+  # -- Specify the replica count for the deployment
   replicaCount: 1
 
   # Image Configuration
   image:
-    # - Specify the repo/image name to pull the image from
+    # -- Specify the repo/image name to pull the image from
     repository: namespaced-route-validator
-    # - Specify the image tag to pull, if blank will pull the version from the chart's AppVersion
+    # -- Specify the image tag to pull, if blank will pull the version from the chart's AppVersion
     tag:
-    # - Specify the image pull policy
+    # -- Specify the image pull policy
     pullPolicy: IfNotPresent
   
   logLevel: info
 
-# - This specifies the namespace selector the admission controller applies to
-# @default - N/A
+# -- This specifies the namespace selector the admission controller applies to
+# @default -- N/A
 namespaceSelector:
   matchLabels:
     enforce-route-check: "true"
@@ -23,36 +23,36 @@ namespaceSelector:
 #   - key: tenant
 #     operator: Exists
 
-# - This specifies which base domains the admission controller applies to
+# -- This specifies which base domains the admission controller applies to
 matchDomains: []
 
 # Service Configuration
 service:
-  # - Specify the name of the service
+  # -- Specify the name of the service
   name: namespaced-route-validator-service
-  # - Specify the port of the service
+  # -- Specify the port of the service
   port: 443
-  # - Specify any additional annotations to add to the service
+  # -- Specify any additional annotations to add to the service
   annotations: {}
 
 # TLS Configuration
 tls:
-  # - If set, this existing secret will be used to secure the controller
+  # -- If set, this existing secret will be used to secure the controller
   existingSecret: ""
 
-  # - Specify a PEM encoded cert to secure the controller
+  # -- Specify a PEM encoded cert to secure the controller
   cert: ""
 
-  # - Specify a PEM encoded key to secure the controller
+  # -- Specify a PEM encoded key to secure the controller
   key: ""
 
 # Webhook Configuration
 webhook:
-  # - Specify the name of the Webhook
+  # -- Specify the name of the Webhook
   name: namespaced-route-validator.openshift.io
 
-  # - Specify the failure policy
+  # -- Specify the failure policy
   failurePolicy: Fail
 
-  # - Specify the CA Bundle that signs the controller's certificate
+  # -- Specify the CA Bundle that signs the controller's certificate
   caBundle: ""
