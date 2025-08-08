@@ -44,55 +44,69 @@ func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface, log 
 
 func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface) *admissionv1.AdmissionResponse {
 	if req.Kind.Kind != "Route" || (req.Operation != admissionv1.Create && req.Operation != admissionv1.Update) {
-		return &admissionv1.AdmissionResponse{Allowed: true}
+		return allow()
 	}
 
 	var route routev1.Route
 	if err := json.Unmarshal(req.Object.Raw, &route); err != nil {
-		return &admissionv1.AdmissionResponse{
-			Allowed: false,
-			Result:  &metav1.Status{Message: fmt.Sprintf("could not unmarshal Route object: %v", err)},
-		}
+		return deny(fmt.Sprintf("could not unmarshal Route object: %v", err))
 	}
 
 	ns, err := client.CoreV1().Namespaces().Get(ctx, req.Namespace, metav1.GetOptions{})
 	if err != nil {
-		return &admissionv1.AdmissionResponse{
-			Allowed: false,
-			Result:  &metav1.Status{Message: fmt.Sprintf("could not get namespace: %v", err)},
-		}
+		return deny(fmt.Sprintf("could not get namespace: %v", err))
 	}
 
 	selector, err := metav1.LabelSelectorAsSelector(cfg.NamespaceSelector)
 	if err != nil {
-		// Failed to parse label selector, default to allowing
 		log.Errorf("Failed to parse namespaceSelector: %v", err)
-		return &admissionv1.AdmissionResponse{Allowed: true}
+		return allow()
 	}
 
 	log.Debugf("cfg: %+v", cfg)
 	log.Debugf("Parsed selector: %v", selector)
-
-	matched := selector.Matches(labels.Set(ns.Labels))
-	log.Debugf("Namespace: %s - Matched: %v", ns.Name, matched)
+	log.Debugf("Namespace: %s - Matched: %v", ns.Name, selector.Matches(labels.Set(ns.Labels)))
 	log.Debugf("Route: %s", req.Name)
 	log.Debugf("Labels: %v", ns.Labels)
 
-	if !matched {
-		// Namespace labels do not match, skip validation
-		return &admissionv1.AdmissionResponse{Allowed: true}
+	if !selector.Matches(labels.Set(ns.Labels)) {
+		return allow()
+	}
+
+	if len(cfg.MatchDomains) > 0 && !matchesAnyDomain(&route, cfg.MatchDomains) {
+		return allow()
 	}
 
 	if !hasValidHostnameSuffix(&route) {
-		return &admissionv1.AdmissionResponse{
-			Allowed: false,
-			Result: &metav1.Status{
-				Message: "route host must include the namespace",
-			},
+		return deny("route host must include the namespace")
+	}
+
+	return allow()
+}
+
+func allow() *admissionv1.AdmissionResponse {
+	return &admissionv1.AdmissionResponse{Allowed: true}
+}
+
+func deny(message string) *admissionv1.AdmissionResponse {
+	return &admissionv1.AdmissionResponse{
+		Allowed: false,
+		Result:  &metav1.Status{Message: message},
+	}
+}
+
+func matchesAnyDomain(route *routev1.Route, matchDomains []string) bool {
+	for _, element := range matchDomains {
+		domain := element
+		if !strings.HasPrefix(element, ".") {
+			domain = "." + element
+		}
+		if strings.HasSuffix(route.Spec.Host, domain) {
+			return true
 		}
 	}
 
-	return &admissionv1.AdmissionResponse{Allowed: true}
+	return false
 }
 
 func hasValidHostnameSuffix(route *routev1.Route) bool {

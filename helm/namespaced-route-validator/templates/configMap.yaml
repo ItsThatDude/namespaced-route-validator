@@ -7,3 +7,5 @@ data:
   config.yaml: |
     namespaceSelector:
       {{- toYaml .Values.namespaceSelector | nindent 6 }}
+    matchDomains:
+      {{- toYaml .Values.matchDomains | nindent 6}}

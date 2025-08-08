@@ -7,6 +7,8 @@ deployment:
 namespaceSelector:
   matchLabels:
     enforce-route-check: 'true'
+matchDomains:
+  - apps.ocp.example.com
 service:
   annotations:
     service.alpha.openshift.io/serving-cert-secret-name: route-validator-tls

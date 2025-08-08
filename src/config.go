@@ -11,6 +11,7 @@ import (
 // WebhookConfig holds the unmarshalled structure from the config map
 type WebhookConfig struct {
 	NamespaceSelector *metav1.LabelSelector `yaml:"namespaceSelector"`
+	MatchDomains      []string              `yaml:"matchDomains"`
 }
 
 func LoadConfigFromFile(path string) (*WebhookConfig, error) {

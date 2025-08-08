@@ -21,6 +21,9 @@ namespaceSelector:
 #   - key: tenant
 #     operator: Exists
 
+# - This specifies which base domains the admission controller applies to
+matchDomains: []
+
 # Service Configuration
 service:
   # - Specify the name of the service
