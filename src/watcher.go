@@ -2,14 +2,15 @@ package main
 
 import (
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"go.uber.org/zap"
 )
 
-func WatchConfigFile(path string, cm *ConfigManager, log *zap.SugaredLogger) {
-	dir := filepath.Dir(path)
+func WatchConfigFile(configFilePath string, cm *ConfigManager, log *zap.SugaredLogger) {
+	dir := filepath.Dir(configFilePath)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -21,7 +22,18 @@ func WatchConfigFile(path string, cm *ConfigManager, log *zap.SugaredLogger) {
 		log.Fatalf("failed to watch directory %s: %v", dir, err)
 	}
 
-	log.Infof("Watching config file for changes: %s", path)
+	log.Infof("Watching config dir for changes: %s", dir)
+
+	var debounceTimer *time.Timer
+	var timerMu sync.Mutex
+
+	triggerReload := func() {
+		if err := cm.LoadFromFile(configFilePath); err != nil {
+			log.Errorf("failed to reload config: %v", err)
+		} else {
+			log.Infof("config reloaded successfully")
+		}
+	}
 
 	for {
 		select {
@@ -30,18 +42,21 @@ func WatchConfigFile(path string, cm *ConfigManager, log *zap.SugaredLogger) {
 				return
 			}
 
-			// Kubernetes updates the file via atomic rename
-			if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename) != 0 {
-				if filepath.Base(event.Name) == filepath.Base(path) {
-					log.Infof("Config file changed: %s", event)
-					// Delay slightly to avoid race with symlink write
-					time.Sleep(100 * time.Millisecond)
+			log.Debugf("fsnotify event: %s | ops: %s", event.Name, event.Op.String())
 
-					if err := cm.LoadFromFile(path); err != nil {
-						log.Errorf("Failed to reload config: %v", err)
-					} else {
-						log.Infof("Successfully reloaded config")
+			// Kubernetes updates the file via atomic rename
+			if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename|fsnotify.Chmod) != 0 {
+				if filepath.Base(event.Name) == filepath.Base(configFilePath) {
+					log.Infof("Config file changed: %s", event)
+
+					timerMu.Lock()
+					if debounceTimer != nil {
+						debounceTimer.Stop()
 					}
+					debounceTimer = time.AfterFunc(200*time.Millisecond, func() {
+						triggerReload()
+					})
+					timerMu.Unlock()
 				}
 			}
 

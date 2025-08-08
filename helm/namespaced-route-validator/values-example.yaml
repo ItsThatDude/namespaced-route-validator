@@ -4,6 +4,7 @@ deployment:
     pullPolicy: Always
     repository: itsthatdood/namespaced-route-validator
     tag: latest
+  logLevel: debug
 namespaceSelector:
   matchLabels:
     enforce-route-check: 'true'

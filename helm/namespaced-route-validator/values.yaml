@@ -11,6 +11,8 @@ deployment:
     tag:
     # - Specify the image pull policy
     pullPolicy: IfNotPresent
+  
+  logLevel: info
 
 # - This specifies the namespace selector the admission controller applies to
 # @default - N/A
