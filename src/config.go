@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
@@ -14,16 +15,30 @@ type WebhookConfig struct {
 	MatchDomains      []string              `yaml:"matchDomains"`
 }
 
-func LoadConfigFromFile(path string) (*WebhookConfig, error) {
+type ConfigManager struct {
+	mu     sync.RWMutex
+	config *WebhookConfig
+}
+
+func (cm *ConfigManager) Get() *WebhookConfig {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+	return cm.config
+}
+
+func (cm *ConfigManager) LoadFromFile(path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var cfg WebhookConfig
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal WebhookConfig: %w", err)
+		return fmt.Errorf("failed to unmarshal WebhookConfig: %w", err)
 	}
 
-	return &cfg, nil
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	cm.config = &cfg
+	return nil
 }

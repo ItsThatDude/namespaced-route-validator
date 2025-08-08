@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) http.HandlerFunc {
+func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interface, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var admissionReview admissionv1.AdmissionReview
 		body, err := io.ReadAll(r.Body)
@@ -29,6 +29,8 @@ func RouteValidatorHandler(cfg *WebhookConfig, client kubernetes.Interface, log 
 			http.Error(w, "could not decode admission review", http.StatusBadRequest)
 			return
 		}
+
+		cfg := cfgManager.Get()
 
 		review := admissionv1.AdmissionReview{
 			TypeMeta: admissionReview.TypeMeta,

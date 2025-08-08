@@ -64,14 +64,17 @@ func main() {
 		log.Fatalf("failed to create clientset: %v", err)
 	}
 
-	//cfg, err := LoadConfigFromConfigMap(clientset, os.Getenv("POD_NAMESPACE"))
-	cfg, err := LoadConfigFromFile("/etc/route-validator/config.yaml")
-	if err != nil {
+	configPath := "/etc/route-validator/config.yaml"
+
+	configManager := &ConfigManager{}
+	if err := configManager.LoadFromFile(configPath); err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	go WatchConfigFile(configPath, configManager, log)
+
 	log.Info("Starting server on :8443")
-	http.HandleFunc("/validate", RouteValidatorHandler(cfg, clientset, log))
+	http.HandleFunc("/validate", RouteValidatorHandler(configManager, clientset, log))
 	server := &http.Server{
 		Addr: ":8443",
 	}

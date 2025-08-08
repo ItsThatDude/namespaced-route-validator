@@ -3,6 +3,7 @@ module github.com/ItsThatDude/namespaced-route-validator
 go 1.24.6
 
 require (
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/openshift/api v0.0.0-20250807013041-3315d665549f
 	go.uber.org/zap v1.27.0
 	k8s.io/api v0.33.3
