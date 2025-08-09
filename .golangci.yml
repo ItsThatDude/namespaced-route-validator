@@ -3,6 +3,9 @@ run:
   tests: true
 
 linters-settings:
+  govet:
+    enable:
+      - shadow
   gocyclo:
     min-complexity: 15
   errcheck:
@@ -14,18 +17,17 @@ linters-settings:
 linters:
   enable:
     - govet
-    - revive
+    - revive         # replaces golint
     - errcheck
     - gocyclo
     - gofmt
     - goimports
     - staticcheck
-    - unused
+    - unused         # replaces deadcode + varcheck
     - ineffassign
     - gosimple
     - typecheck
     - depguard
-    - shadow
 
 issues:
   exclude-use-default: false
