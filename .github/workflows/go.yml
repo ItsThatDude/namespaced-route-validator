@@ -41,7 +41,7 @@ jobs:
       with:
         version: latest
         working-directory: src
-        args: run --timeout=5m
+        args: --timeout=5m
 
     - name: Build
       working-directory: src
