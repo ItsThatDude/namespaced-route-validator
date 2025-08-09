@@ -1,0 +1,55 @@
+# .golangci.yml
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - bin
+    - vendor
+  # Limit linting to the src folder (so it doesn't try to lint GitHub workflow scripts etc.)
+  skip-files:
+    - ^.*_generated\.go$
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0.8
+  gocyclo:
+    min-complexity: 15
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  staticcheck:
+    checks: ["all"]
+
+linters:
+  enable:
+    - govet
+    - golint
+    - errcheck
+    - gocyclo
+    - gofmt
+    - goimports
+    - staticcheck
+    - unused
+    - deadcode
+    - varcheck
+    - ineffassign
+    - gosimple
+    - typecheck
+    - depguard
+  disable:
+    - maligned # too noisy for most teams
+    - scopelint # deprecated
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    - linters:
+        - errcheck
+      text: "defer .*Close.* error"
+
+output:
+  format: colored-line-number
