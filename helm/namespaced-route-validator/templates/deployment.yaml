@@ -30,6 +30,7 @@ spec:
           {{- if .Values.deployment.livenessProbe.enabled }}
           livenessProbe: {{- include "namespaced-route-validator.render" (dict "value" (omit .Values.deployment.livenessProbe "enabled") "context" $) | nindent 12 }}
             httpGet:
+              scheme: HTTPS
               path: /healthz
               port: https
           {{- else if .Values.deployment.customLivenessProbe }}
@@ -38,6 +39,7 @@ spec:
           {{- if .Values.deployment.readinessProbe.enabled }}
           readinessProbe: {{- include "namespaced-route-validator.render" (dict "value" (omit .Values.deployment.readinessProbe "enabled") "context" $) | nindent 12 }}
             httpGet:
+              scheme: HTTPS
               path: /healthz
               port: https
           {{- else if .Values.deployment.customReadinessProbe }}
