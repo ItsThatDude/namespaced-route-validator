@@ -19,10 +19,9 @@ jobs:
       with:
         go-version: '1.24'
         cache: true
-        cache-dependency-path: src/go.sum
+        cache-dependency-path: go.sum
 
     - name: Check formatting
-      working-directory: src
       run: |
         fmt_out=$(go fmt ./...)
         if [ -n "$fmt_out" ]; then
@@ -33,19 +32,16 @@ jobs:
         fi
 
     - name: Run static analysis
-      working-directory: src
       run: go vet ./...
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v4
       with:
         version: latest
-        working-directory: src
         args: --timeout=5m
 
     - name: Build
-      working-directory: src
-      run: go build -v -o ../bin/app ./...
+      run: go build -v -o ../bin/controller ./cmd/controller
 
     - name: Test
       working-directory: src
@@ -59,12 +55,12 @@ jobs:
     - name: Download built binary
       uses: actions/download-artifact@v4
       with:
-        name: app
-        path: bin
+        name: controller
+        path: bin/controller
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        files: bin/app
+        files: bin/controller
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
