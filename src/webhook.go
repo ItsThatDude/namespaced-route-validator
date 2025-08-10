@@ -35,7 +35,7 @@ func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interfac
 		review := admissionv1.AdmissionReview{
 			TypeMeta: admissionReview.TypeMeta,
 		}
-		review.Response = validateRoute(r.Context(), admissionReview.Request, cfg, client)
+		review.Response = validateRoute(r.Context(), admissionReview.Request, cfg, client, log)
 		review.Response.UID = admissionReview.Request.UID
 
 		respBytes, _ := json.Marshal(review)
@@ -44,7 +44,7 @@ func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interfac
 	}
 }
 
-func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface) *admissionv1.AdmissionResponse {
+func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) *admissionv1.AdmissionResponse {
 	if req.Kind.Kind != "Route" || (req.Operation != admissionv1.Create && req.Operation != admissionv1.Update) {
 		return allow()
 	}
