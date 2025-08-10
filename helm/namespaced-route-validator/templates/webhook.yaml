@@ -3,6 +3,10 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: route-validator-webhook
   namespace: {{ .Release.Namespace }}
+  {{- if .Values.webhook.annotations }}
+  annotations:
+    {{- toYaml .Values.webhook.annotations | nindent 4 }}
+  {{- end }}
 webhooks:
   - name: {{ .Values.webhook.name }}
     rules:

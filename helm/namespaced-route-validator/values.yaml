@@ -91,3 +91,6 @@ webhook:
 
   # -- Specify the CA Bundle that signs the controller's certificate
   caBundle: ""
+
+  # -- Specify any additional annotations to add to the webhook
+  annotations: {}
