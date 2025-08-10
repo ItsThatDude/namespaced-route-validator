@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	listenAddr   = flag.String("listen-addr", ":8080", "HTTP listen address.")
+	listenAddr   = flag.String("listen-addr", ":8443", "HTTP listen address.")
 	readTimeout  = flag.Duration("read-timeout", 2*time.Minute, "HTTP request timeout.")
 	writeTimeout = flag.Duration("write-timeout", 2*time.Minute, "HTTP response timeout.")
 )
