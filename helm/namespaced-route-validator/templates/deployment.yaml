@@ -20,7 +20,7 @@ spec:
           ports:
             - name: https
               containerPort: 8443
-          {{- if .Values.startupProbe.enabled }}
+          {{- if .Values.deployment.startupProbe.enabled }}
           startupProbe: {{- include "namespaced-route-validator.render" (dict "value" (omit .Values.deployment.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: https
