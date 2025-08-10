@@ -3,4 +3,4 @@ name: namespaced-route-validator
 description: A helm chart to deploy the Namespaced Route Validator
 type: application
 version: 0.1.4
-appVersion: "0.1.2"
+appVersion: "0.1.3"
