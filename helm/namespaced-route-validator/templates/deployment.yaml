@@ -18,7 +18,31 @@ spec:
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
           ports:
-            - containerPort: 8443
+            - name: https
+              containerPort: 8443
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "namespaced-route-validator.render" (dict "value" (omit .Values.deployment.startupProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: https
+          {{- else if .Values.deployment.customStartupProbe }}
+          startupProbe: {{- include "namespaced-route-validator.render" (dict "value" .Values.deployment.customStartupProbe "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.deployment.livenessProbe.enabled }}
+          livenessProbe: {{- include "namespaced-route-validator.render" (dict "value" (omit .Values.deployment.livenessProbe "enabled") "context" $) | nindent 12 }}
+            httpGet:
+              path: /healthz
+              port: https
+          {{- else if .Values.deployment.customLivenessProbe }}
+          livenessProbe: {{- include "namespaced-route-validator.render" (dict "value" .Values.deployment.customLivenessProbe "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.deployment.readinessProbe.enabled }}
+          readinessProbe: {{- include "namespaced-route-validator.render" (dict "value" (omit .Values.deployment.readinessProbe "enabled") "context" $) | nindent 12 }}
+            httpGet:
+              path: /healthz
+              port: https
+          {{- else if .Values.deployment.customReadinessProbe }}
+          readinessProbe: {{- include "namespaced-route-validator.render" (dict "value" .Values.deployment.customReadinessProbe "context" $) | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: tls-certs
               mountPath: /certs

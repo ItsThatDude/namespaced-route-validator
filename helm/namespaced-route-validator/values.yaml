@@ -14,6 +14,34 @@ deployment:
   
   logLevel: info
 
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+    
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+  
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+
 # -- This specifies the namespace selector the admission controller applies to
 # @default -- N/A
 namespaceSelector:

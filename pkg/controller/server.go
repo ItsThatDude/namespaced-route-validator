@@ -37,11 +37,11 @@ func httpserver(configManager *ConfigManager, clientset *kubernetes.Clientset, l
 		WriteTimeout:      *writeTimeout,
 	}
 
-	log.Infof("HTTP server serving", "addr", server.Addr)
+	log.Info("HTTP server serving", "addr", server.Addr)
 
 	go func() {
 		err := server.ListenAndServeTLS("/certs/tls.crt", "/certs/tls.key")
-		log.Errorf("HTTP server exiting", "error", err)
+		log.Error("HTTP server exiting", "error", err)
 	}()
 
 	return &server
