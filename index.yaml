@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  namespaced-route-validator:
+  - apiVersion: v2
+    appVersion: 0.1.2
+    created: "2025-08-10T08:54:25.036643066Z"
+    description: A helm chart to deploy the Namespaced Route Validator
+    digest: ba2ecd4e339e2421acc9e8893ec8550f2e1f43d356cc6ca7197f4be3b4322060
+    name: namespaced-route-validator
+    type: application
+    urls:
+    - https://github.com/ItsThatDude/namespaced-route-validator/releases/download/namespaced-route-validator-0.1.0/namespaced-route-validator-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-08-10T08:54:25.036653645Z"
