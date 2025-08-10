@@ -2,5 +2,5 @@ apiVersion: v2
 name: namespaced-route-validator
 description: A helm chart to deploy the Namespaced Route Validator
 type: application
-version: 0.1.5
+version: 0.1.6
 appVersion: "0.1.3"

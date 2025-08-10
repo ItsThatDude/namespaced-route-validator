@@ -6,6 +6,6 @@ metadata:
 data:
   config.yaml: |
     namespaceSelector:
-      {{- toYaml .Values.namespaceSelector | nindent 6 }}
+      {{- toYaml .Values.validator.namespaceSelector | nindent 6 }}
     matchDomains:
-      {{- toYaml .Values.matchDomains | nindent 6}}
+      {{- toYaml .Values.validator.matchDomains | nindent 6}}

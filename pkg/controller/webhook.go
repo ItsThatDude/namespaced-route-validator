@@ -19,7 +19,7 @@ import (
 
 type objectValidator[T any] struct {
 	Kind          string
-	MatchDomainFn func(*T, []string) bool
+	MatchDomainFn func(*T, []string, *zap.SugaredLogger) bool
 	HostnamesFn   func(*T) []string
 }
 
@@ -106,6 +106,7 @@ func validateObject[T any](
 	v objectValidator[T],
 ) *admissionv1.AdmissionResponse {
 	if !isKindAndOp(req, v.Kind, admissionv1.Create, admissionv1.Update) {
+		log.Debugf("Skipping %s - Op = %v", v.Kind, req.Operation)
 		return allow()
 	}
 
@@ -126,10 +127,14 @@ func validateObject[T any](
 	}
 
 	if !selector.Matches(labels.Set(ns.Labels)) {
+		log.Debugf("Skipping %s/%s - Namespace %s not a match", v.Kind, req.Name, ns.Name)
+		log.Debugf("Selector: %v", selector.String())
+		log.Debugf("Labels: %v", ns.Labels)
 		return allow()
 	}
 
-	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains) {
+	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains, log) {
+		log.Debugf("Skipping %s/%s - Domain not a match", v.Kind, req.Name)
 		return allow()
 	}
 
@@ -138,6 +143,8 @@ func validateObject[T any](
 			return deny(fmt.Sprintf("%s host must include the namespace", v.Kind))
 		}
 	}
+
+	log.Debugf("Allowing %s/%s - Host domain is valid", v.Kind, req.Name)
 
 	return allow()
 }
@@ -165,8 +172,9 @@ func deny(message string) *admissionv1.AdmissionResponse {
 	}
 }
 
-func ingressMatchesAnyDomain(ingress *networkingv1.Ingress, matchDomains []string) bool {
+func ingressMatchesAnyDomain(ingress *networkingv1.Ingress, matchDomains []string, log *zap.SugaredLogger) bool {
 	for _, rule := range ingress.Spec.Rules {
+		log.Debugf("Evaluating host %s", rule.Host)
 		host := rule.Host
 
 		for _, element := range matchDomains {
@@ -174,24 +182,35 @@ func ingressMatchesAnyDomain(ingress *networkingv1.Ingress, matchDomains []strin
 			if !strings.HasPrefix(element, ".") {
 				domain = "." + element
 			}
+
+			log.Debugf("%s - Evaluating %s against domain %s", ingress.Name, host, domain)
 			if strings.HasSuffix(host, domain) {
+				log.Debugf("%s - %s Matched against domain %s", ingress.Name, host, domain)
 				return true
 			}
+			log.Debugf("%s - %s Not a match against domain %s", ingress.Name, host, domain)
 		}
 	}
+
+	log.Debugf("Ingress %s does not match any of the applicable domains", ingress.Name)
 
 	return false
 }
 
-func routeMatchesAnyDomain(route *routev1.Route, matchDomains []string) bool {
+func routeMatchesAnyDomain(route *routev1.Route, matchDomains []string, log *zap.SugaredLogger) bool {
+	log.Debugf("Evaluating host %s", route.Spec.Host)
 	for _, element := range matchDomains {
 		domain := element
 		if !strings.HasPrefix(element, ".") {
 			domain = "." + element
 		}
+
+		log.Debugf("%s - Evaluating %s against domain %s", route.Name, route.Spec.Host, domain)
 		if strings.HasSuffix(route.Spec.Host, domain) {
+			log.Debugf("%s - %s Matched against domain %s", route.Name, route.Spec.Host, domain)
 			return true
 		}
+		log.Debugf("%s - %s Not a match against domain %s", route.Name, route.Spec.Host, domain)
 	}
 
 	return false
