@@ -1,9 +1,11 @@
 package controller
 
 import (
-	"net/http"
+	"context"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -73,12 +75,15 @@ func Main() error {
 
 	go WatchConfigFile(configPath, configManager, log)
 
-	log.Info("Starting server on :8443")
-	http.HandleFunc("/validate", RouteValidatorHandler(configManager, clientset, log))
-	server := &http.Server{
-		Addr: ":8443",
+	server := httpserver(configManager, clientset, log)
+
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGTERM)
+	<-sigterm
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		return err
 	}
-	log.Fatal(server.ListenAndServeTLS("/certs/tls.crt", "/certs/tls.key"))
 
 	return nil
 }
