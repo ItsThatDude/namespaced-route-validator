@@ -140,7 +140,7 @@ func validateObject[T any](
 
 	for _, host := range v.HostnamesFn(&obj) {
 		if !validateHostnameSuffix(req.Namespace, host) {
-			return deny(fmt.Sprintf("%s host must include the namespace", v.Kind))
+			return deny(fmt.Sprintf("%s %s host %s must include the namespace %s", v.Kind, req.Name, host, req.Namespace))
 		}
 	}
 
