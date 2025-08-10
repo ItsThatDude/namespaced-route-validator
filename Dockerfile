@@ -5,14 +5,14 @@ FROM golang:1.24 AS builder
 WORKDIR /app
 
 # Copy Go module files first for layer caching
-COPY src/go.mod src/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy source code into builder image
-COPY src/ ./
+COPY . ./
 
 # Build the statically linked binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o route-validator .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o controller ./cmd/controller
 
 # Stage 2: Runtime container
 FROM alpine:3.18
@@ -27,7 +27,7 @@ RUN adduser -D -g '' appuser
 RUN mkdir /certs
 
 # Copy the built binary
-COPY --from=builder /app/route-validator /route-validator
+COPY --from=builder /app/controller /controller
 
 # Expose TLS cert path
 VOLUME ["/certs"]
@@ -36,4 +36,4 @@ VOLUME ["/certs"]
 USER appuser
 
 # Run the admission controller
-ENTRYPOINT ["/route-validator"]
+ENTRYPOINT ["/controller"]

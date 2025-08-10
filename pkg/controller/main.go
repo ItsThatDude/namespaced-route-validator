@@ -1,4 +1,4 @@
-package main
+package controller
 
 import (
 	"net/http"
@@ -48,7 +48,7 @@ func setupLogger() *zap.Logger {
 	return logger
 }
 
-func main() {
+func Main() error {
 	raw := setupLogger()
 	defer raw.Sync()
 	log = raw.Sugar()
@@ -79,4 +79,6 @@ func main() {
 		Addr: ":8443",
 	}
 	log.Fatal(server.ListenAndServeTLS("/certs/tls.crt", "/certs/tls.key"))
+
+	return nil
 }
