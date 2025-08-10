@@ -3,10 +3,8 @@ name: Build
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'src/**'
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - 'v*'
     paths:
       - 'src/**'
 
