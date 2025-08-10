@@ -1,3 +1,22 @@
+validator:
+  # -- Validate Ingress objects
+  validateIngress: true
+
+  # -- Validate OpenShift/OKD Route objects
+  validateRoutes: true
+
+  # -- This specifies the namespace selector the admission controller applies to
+  # @default -- N/A
+  namespaceSelector:
+    matchLabels:
+      enforce-route-check: "true"
+  # matchExpressions:
+  #   - key: tenant
+  #     operator: Exists
+
+  # -- This specifies which base domains the admission controller applies to
+  matchDomains: []
+
 # Deployment Configuration
 deployment:
   # -- Specify the replica count for the deployment
@@ -41,18 +60,6 @@ deployment:
   customLivenessProbe: {}
   customReadinessProbe: {}
   customStartupProbe: {}
-
-# -- This specifies the namespace selector the admission controller applies to
-# @default -- N/A
-namespaceSelector:
-  matchLabels:
-    enforce-route-check: "true"
-# matchExpressions:
-#   - key: tenant
-#     operator: Exists
-
-# -- This specifies which base domains the admission controller applies to
-matchDomains: []
 
 # Service Configuration
 service:

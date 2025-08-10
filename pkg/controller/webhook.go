@@ -11,10 +11,17 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	"go.uber.org/zap"
 	admissionv1 "k8s.io/api/admission/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
+
+type objectValidator[T any] struct {
+	Kind          string
+	MatchDomainFn func(*T, []string) bool
+	HostnamesFn   func(*T) []string
+}
 
 func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interface, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +42,8 @@ func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interfac
 		review := admissionv1.AdmissionReview{
 			TypeMeta: admissionReview.TypeMeta,
 		}
-		review.Response = validateRoute(r.Context(), admissionReview.Request, cfg, client, log)
+
+		review.Response = validate(r.Context(), admissionReview.Request, cfg, client, log)
 		review.Response.UID = admissionReview.Request.UID
 
 		respBytes, _ := json.Marshal(review)
@@ -44,14 +52,66 @@ func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interfac
 	}
 }
 
-func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) *admissionv1.AdmissionResponse {
-	if req.Kind.Kind != "Route" || (req.Operation != admissionv1.Create && req.Operation != admissionv1.Update) {
+func validate(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) *admissionv1.AdmissionResponse {
+	if req.Operation != admissionv1.Create && req.Operation != admissionv1.Update {
 		return allow()
 	}
 
-	var route routev1.Route
-	if err := json.Unmarshal(req.Object.Raw, &route); err != nil {
-		return deny(fmt.Sprintf("could not unmarshal Route object: %v", err))
+	switch req.Kind.Kind {
+	case "Ingress":
+		return validateIngress(ctx, req, cfg, client, log)
+	case "Route":
+		return validateRoute(ctx, req, cfg, client, log)
+	default:
+		return allow()
+	}
+}
+
+func validateIngress(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) *admissionv1.AdmissionResponse {
+	if !isKindAndOp(req, "Ingress", admissionv1.Create, admissionv1.Update) {
+		return allow()
+	}
+	return validateObject(ctx, req, cfg, client, log, objectValidator[networkingv1.Ingress]{
+		Kind:          "Ingress",
+		MatchDomainFn: ingressMatchesAnyDomain,
+		HostnamesFn: func(i *networkingv1.Ingress) []string {
+			hosts := []string{}
+			for _, rule := range i.Spec.Rules {
+				hosts = append(hosts, rule.Host)
+			}
+			return hosts
+		},
+	})
+}
+
+func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *WebhookConfig, client kubernetes.Interface, log *zap.SugaredLogger) *admissionv1.AdmissionResponse {
+	if !isKindAndOp(req, "Route", admissionv1.Create, admissionv1.Update) {
+		return allow()
+	}
+	return validateObject(ctx, req, cfg, client, log, objectValidator[routev1.Route]{
+		Kind:          "Route",
+		MatchDomainFn: routeMatchesAnyDomain,
+		HostnamesFn: func(r *routev1.Route) []string {
+			return []string{r.Spec.Host}
+		},
+	})
+}
+
+func validateObject[T any](
+	ctx context.Context,
+	req *admissionv1.AdmissionRequest,
+	cfg *WebhookConfig,
+	client kubernetes.Interface,
+	log *zap.SugaredLogger,
+	v objectValidator[T],
+) *admissionv1.AdmissionResponse {
+	if !isKindAndOp(req, v.Kind, admissionv1.Create, admissionv1.Update) {
+		return allow()
+	}
+
+	var obj T
+	if err := json.Unmarshal(req.Object.Raw, &obj); err != nil {
+		return deny(fmt.Sprintf("could not unmarshal %s object: %v", v.Kind, err))
 	}
 
 	ns, err := client.CoreV1().Namespaces().Get(ctx, req.Namespace, metav1.GetOptions{})
@@ -65,25 +125,33 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 		return allow()
 	}
 
-	log.Debugf("cfg: %+v", cfg)
-	log.Debugf("Parsed selector: %v", selector)
-	log.Debugf("Namespace: %s - Matched: %v", ns.Name, selector.Matches(labels.Set(ns.Labels)))
-	log.Debugf("Route: %s", req.Name)
-	log.Debugf("Labels: %v", ns.Labels)
-
 	if !selector.Matches(labels.Set(ns.Labels)) {
 		return allow()
 	}
 
-	if len(cfg.MatchDomains) > 0 && !matchesAnyDomain(&route, cfg.MatchDomains) {
+	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains) {
 		return allow()
 	}
 
-	if !hasValidHostnameSuffix(&route) {
-		return deny("route host must include the namespace")
+	for _, host := range v.HostnamesFn(&obj) {
+		if !validateHostnameSuffix(req.Namespace, host) {
+			return deny(fmt.Sprintf("%s host must include the namespace", v.Kind))
+		}
 	}
 
 	return allow()
+}
+
+func isKindAndOp(req *admissionv1.AdmissionRequest, kind string, ops ...admissionv1.Operation) bool {
+	if req.Kind.Kind != kind {
+		return false
+	}
+	for _, op := range ops {
+		if req.Operation == op {
+			return true
+		}
+	}
+	return false
 }
 
 func allow() *admissionv1.AdmissionResponse {
@@ -97,7 +165,25 @@ func deny(message string) *admissionv1.AdmissionResponse {
 	}
 }
 
-func matchesAnyDomain(route *routev1.Route, matchDomains []string) bool {
+func ingressMatchesAnyDomain(ingress *networkingv1.Ingress, matchDomains []string) bool {
+	for _, rule := range ingress.Spec.Rules {
+		host := rule.Host
+
+		for _, element := range matchDomains {
+			domain := element
+			if !strings.HasPrefix(element, ".") {
+				domain = "." + element
+			}
+			if strings.HasSuffix(host, domain) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func routeMatchesAnyDomain(route *routev1.Route, matchDomains []string) bool {
 	for _, element := range matchDomains {
 		domain := element
 		if !strings.HasPrefix(element, ".") {
@@ -111,9 +197,8 @@ func matchesAnyDomain(route *routev1.Route, matchDomains []string) bool {
 	return false
 }
 
-func hasValidHostnameSuffix(route *routev1.Route) bool {
-	hostname := route.Spec.Host
-	nsSuffix := "-" + route.Namespace + "."
+func validateHostnameSuffix(namespace string, hostname string) bool {
+	nsSuffix := "-" + namespace + "."
 
 	return strings.Contains(hostname, nsSuffix)
 }

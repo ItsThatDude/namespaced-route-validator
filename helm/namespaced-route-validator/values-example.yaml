@@ -1,3 +1,9 @@
+validator:
+  namespaceSelector:
+    matchLabels:
+      enforce-route-check: 'true'
+  matchDomains:
+    - apps.ocp.example.com
 deployment:
   replicaCount: 1
   image:
@@ -5,11 +11,6 @@ deployment:
     repository: itsthatdood/namespaced-route-validator
     tag: latest
   logLevel: debug
-namespaceSelector:
-  matchLabels:
-    enforce-route-check: 'true'
-matchDomains:
-  - apps.ocp.example.com
 service:
   annotations:
     service.alpha.openshift.io/serving-cert-secret-name: route-validator-tls
