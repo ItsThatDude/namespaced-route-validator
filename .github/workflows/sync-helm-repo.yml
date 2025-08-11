@@ -16,3 +16,6 @@ jobs:
         with:
           GH_PAT: ${{ secrets.FILE_SYNC_PAT }}
           IS_FINE_GRAINED: true
+          PR_LABELS: |
+            file-sync
+            automerge
