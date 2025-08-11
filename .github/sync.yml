@@ -1,0 +1,4 @@
+itsthatdude/helm-charts:
+  - source: helm/namespaced-route-validator/
+    dest: charts/namespaced-route-validator/
+    deleteOrphaned: true
