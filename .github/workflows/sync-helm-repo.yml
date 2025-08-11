@@ -1,3 +1,4 @@
+name: Sync Helm Repo
 on:
   push:
     branches:
