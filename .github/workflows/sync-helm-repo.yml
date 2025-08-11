@@ -15,3 +15,4 @@ jobs:
         uses: BetaHuhn/repo-file-sync-action@v1
         with:
           GH_PAT: ${{ secrets.FILE_SYNC_PAT }}
+          IS_FINE_GRAINED: true
