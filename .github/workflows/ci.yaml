@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - cmd/**
+      - pkg/**
+      - go.mod
+      - go.sum
 
 jobs:
   docker:
