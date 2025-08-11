@@ -1,10 +1,41 @@
-FROM gcr.io/distroless/static@sha256:d6fa9db9548b5772860fecddb11d84f9ebd7e0321c0cb3c02870402680cc315f
+# Stage 1: Build the Go binary
+FROM golang:1.24 AS builder
 
-USER 1001
+# Set working directory
+WORKDIR /app
 
-ARG TARGETARCH
-COPY dist/controller_linux_${TARGETARCH}*/controller /usr/local/bin/
+# Copy Go module files first for layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code into builder image
+COPY . ./
+
+# Build the statically linked binary
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o controller ./cmd/controller
+
+# Stage 2: Runtime container
+FROM alpine:3.18
+
+# Install CA certificates
+RUN apk --no-cache add ca-certificates
+
+# Create a non-root user for the app
+RUN adduser -D -g '' appuser
+
+# Create mount point for TLS certs
+RUN mkdir /certs
+
+# Copy the built binary
+COPY --from=builder /app/controller /usr/local/bin/controller
+
+# Expose TLS cert path
+VOLUME ["/certs"]
+
+# Use non-root user
+USER appuser
 
 EXPOSE 8443 8443
 
+# Run the admission controller
 ENTRYPOINT ["controller"]

@@ -58,22 +58,8 @@ $(eval $(call binaries,darwin,amd64))
 controller-static: controller-static-$(GOOS)-$(GOARCH)
 	cp $< $@
 
-define image
-$(1).image.$(3)-$(4): docker/$(1).Dockerfile $(1)-static-$(3)-$(4)
-	mkdir -p dist/$(1)_$(3)_$(4)
-	cp $(1)-static-$(3)-$(4) dist/$(1)_$(3)_$(4)/$(1)
-	$(DOCKER) build --build-arg TARGETARCH=$(4) -t $(2)-$(3)-$(4) -f docker/$(1).Dockerfile .
-	@echo $(2)-$(3)-$(4) >$$@.tmp
-	@mv $$@.tmp $$@
-endef
-
-define images
-$(call image,controller,${CONTROLLER_IMAGE},$1,$2)
-endef
-
-$(eval $(call images,linux,amd64))
-$(eval $(call images,linux,arm64))
-$(eval $(call images,linux,arm))
+controller.image: docker/controller.Dockerfile
+	$(DOCKER) build -f docker/controller.Dockerfile .
 
 test:
 	$(GOTESTSUM) $(GO_FLAGS) --junitfile report.xml --format testname -- "-coverprofile=coverage.out" $(GO_PACKAGES)
@@ -94,8 +80,5 @@ clean:
 	$(RM) controller.image*
 	$(RM) -r ./dist
 
-#push-controller: clean controller.image.$(OS)-$(ARCH)
-#	docker tag $(CONTROLLER_IMAGE)-$(OS)-$(ARCH) $(CONTROLLER_IMAGE)
-push-controller: clean controller.image.linux-amd64
-	docker tag $(CONTROLLER_IMAGE)-linux-amd64 $(CONTROLLER_IMAGE)
+push-controller: clean controller.image
 	docker push $(CONTROLLER_IMAGE)
