@@ -1,6 +1,6 @@
 # Namespaced Route Validator
 
-Namespaced Route Validator is a Kubernetes Validating Webhook / Admission Controller that simply enforces the use of the namespace in Kubernetes Ingress and OCP Route hostnames.
+Namespaced Route Validator is a Kubernetes Validating Webhook / Admission Controller that simply enforces the use of a specific subdomain in Kubernetes Ingress and OCP Route hostnames.
 
 ## Installation
 
@@ -46,10 +46,14 @@ You can customize the values of the helm deployment by using the following Value
 
 ## Usage
 
-### Annotate the target `namespace`
+### Label the target `namespace`
 Add the configured label to the namespace to enable the controller to enforce the hostname validation.  
 The default label is `enforce-route-check: "true"`
 
+### Label the target `namespace` (Optional)
+To override the subdomain being required, set the label configured in the values file to the subdomain. 
+By default the label is `route-validator.antware.xyz/subdomain`
+
 ### Done!
 The controller will monitor any namespaces with the configured label.  
-If any Ingresses or Routes are created within the namespace, and they don't match the format *-\<namespace\>.\<base-domain\> they will be rejected.
+If any Ingresses or Routes are created within the namespace, and they don't match the format *.\<subdomain\>.\<base-domain\> they will be rejected.
