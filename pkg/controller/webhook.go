@@ -18,9 +18,9 @@ import (
 )
 
 type objectValidator[T any] struct {
-	Kind          string
-	MatchDomainFn func(*T, []string, *zap.SugaredLogger) bool
-	HostnamesFn   func(*T) []string
+	Kind           string
+	MatchDomainFn  func(*T, []string, *zap.SugaredLogger) bool
+	GetHostnamesFn func(*T) []string
 }
 
 func RouteValidatorHandler(cfgManager *ConfigManager, client kubernetes.Interface, log *zap.SugaredLogger) http.HandlerFunc {
@@ -74,7 +74,7 @@ func validateIngress(ctx context.Context, req *admissionv1.AdmissionRequest, cfg
 	return validateObject(ctx, req, cfg, client, log, objectValidator[networkingv1.Ingress]{
 		Kind:          "Ingress",
 		MatchDomainFn: ingressMatchesAnyDomain,
-		HostnamesFn: func(i *networkingv1.Ingress) []string {
+		GetHostnamesFn: func(i *networkingv1.Ingress) []string {
 			hosts := []string{}
 			for _, rule := range i.Spec.Rules {
 				hosts = append(hosts, rule.Host)
@@ -91,7 +91,7 @@ func validateRoute(ctx context.Context, req *admissionv1.AdmissionRequest, cfg *
 	return validateObject(ctx, req, cfg, client, log, objectValidator[routev1.Route]{
 		Kind:          "Route",
 		MatchDomainFn: routeMatchesAnyDomain,
-		HostnamesFn: func(r *routev1.Route) []string {
+		GetHostnamesFn: func(r *routev1.Route) []string {
 			return []string{r.Spec.Host}
 		},
 	})
@@ -133,14 +133,23 @@ func validateObject[T any](
 		return allow()
 	}
 
+	subdomainLabel := req.Namespace
+
+	if cfg.SubdomainLabel != "" {
+		subdomainLabel = ns.Labels[cfg.SubdomainLabel]
+	}
+
 	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains, log) {
 		log.Debugf("Skipping %s/%s - Domain not a match", v.Kind, req.Name)
 		return allow()
 	}
 
-	for _, host := range v.HostnamesFn(&obj) {
-		if !validateHostnameSuffix(req.Namespace, host) {
-			return deny(fmt.Sprintf("%s %s host %s must include the namespace %s", v.Kind, req.Name, host, req.Namespace))
+	for _, host := range v.GetHostnamesFn(&obj) {
+		if !validateHostnameSuffix(subdomainLabel, host) {
+			return deny(fmt.Sprintf(
+				"%s %s host %s must include the namespace %s",
+				v.Kind, req.Name, host, req.Namespace,
+			))
 		}
 	}
 
@@ -177,18 +186,11 @@ func ingressMatchesAnyDomain(ingress *networkingv1.Ingress, matchDomains []strin
 		log.Debugf("Evaluating host %s", rule.Host)
 		host := rule.Host
 
-		for _, element := range matchDomains {
-			domain := element
-			if !strings.HasPrefix(element, ".") {
-				domain = "." + element
-			}
+		matchedDomain := matchHostToDomain(host, matchDomains)
 
-			log.Debugf("%s - Evaluating %s against domain %s", ingress.Name, host, domain)
-			if strings.HasSuffix(host, domain) {
-				log.Debugf("%s - %s Matched against domain %s", ingress.Name, host, domain)
-				return true
-			}
-			log.Debugf("%s - %s Not a match against domain %s", ingress.Name, host, domain)
+		if matchedDomain != "" {
+			log.Debugf("Ingress %s - host %s matched domain %s", ingress.Name, host, matchedDomain)
+			return true
 		}
 	}
 
@@ -198,26 +200,34 @@ func ingressMatchesAnyDomain(ingress *networkingv1.Ingress, matchDomains []strin
 }
 
 func routeMatchesAnyDomain(route *routev1.Route, matchDomains []string, log *zap.SugaredLogger) bool {
-	log.Debugf("Evaluating host %s", route.Spec.Host)
-	for _, element := range matchDomains {
+	log.Debugf("Route %s - Evaluating host %s", route.Name, route.Spec.Host)
+
+	matchedDomain := matchHostToDomain(route.Spec.Host, matchDomains)
+
+	if matchedDomain != "" {
+		log.Debugf("Route %s - host %s matched domain %s", route.Name, route.Spec.Host, matchedDomain)
+	}
+
+	return matchedDomain != ""
+}
+
+func matchHostToDomain(host string, domains []string) string {
+	for _, element := range domains {
 		domain := element
 		if !strings.HasPrefix(element, ".") {
 			domain = "." + element
 		}
 
-		log.Debugf("%s - Evaluating %s against domain %s", route.Name, route.Spec.Host, domain)
-		if strings.HasSuffix(route.Spec.Host, domain) {
-			log.Debugf("%s - %s Matched against domain %s", route.Name, route.Spec.Host, domain)
-			return true
+		if strings.HasSuffix(host, domain) {
+			return domain
 		}
-		log.Debugf("%s - %s Not a match against domain %s", route.Name, route.Spec.Host, domain)
 	}
 
-	return false
+	return ""
 }
 
-func validateHostnameSuffix(namespace string, hostname string) bool {
-	nsSuffix := "-" + namespace + "."
+func validateHostnameSuffix(subdomain string, hostname string) bool {
+	nsSuffix := "." + subdomain + "."
 
 	return strings.Contains(hostname, nsSuffix)
 }

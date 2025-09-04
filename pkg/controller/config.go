@@ -13,6 +13,7 @@ import (
 // WebhookConfig holds the unmarshalled structure from the config map
 type WebhookConfig struct {
 	NamespaceSelector *metav1.LabelSelector `yaml:"namespaceSelector"`
+	SubdomainLabel    string                `yaml:"subdomainLabel"`
 	MatchDomains      []string              `yaml:"matchDomains"`
 }
 
