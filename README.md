@@ -43,6 +43,7 @@ You can customize the values of the helm deployment by using the following Value
 | webhook.caBundle | string | `""` | Specify the CA Bundle that signs the controller's certificate |
 | webhook.failurePolicy | string | `"Fail"` | Specify the failure policy |
 | webhook.name | string | `"route-validator.antware.xyz"` | Specify the name of the Webhook |
+| webhook.useCertManager | bool | `true` | Use CertManager to manage the webhook certificate |
 
 ## Usage
 
