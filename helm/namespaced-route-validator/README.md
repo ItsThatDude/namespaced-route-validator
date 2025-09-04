@@ -1,6 +1,6 @@
 # namespaced-route-validator
 
-![Version: 0.1.10](https://img.shields.io/badge/Version-0.1.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.4](https://img.shields.io/badge/AppVersion-0.1.4-informational?style=flat-square)
+![Version: 0.1.14](https://img.shields.io/badge/Version-0.1.14-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.4](https://img.shields.io/badge/AppVersion-0.1.4-informational?style=flat-square)
 
 A helm chart to deploy the Namespaced Route Validator
 
@@ -8,6 +8,7 @@ A helm chart to deploy the Namespaced Route Validator
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| deployment.containerSecurityContext | string | `nil` | Specify a custom container securityContext |
 | deployment.customLivenessProbe | object | `{}` | Specify a custom liveness probe |
 | deployment.customReadinessProbe | object | `{}` | Specify a custom readiness probe |
 | deployment.customStartupProbe | object | `{}` | Specify a custom startup probe |
@@ -18,6 +19,7 @@ A helm chart to deploy the Namespaced Route Validator
 | deployment.logLevel | string | `"info"` | Specify the log level of the controller |
 | deployment.readinessProbe | object | N/A | Override the settings for the default readiness probe |
 | deployment.replicaCount | int | `1` | Specify the replica count for the deployment |
+| deployment.securityContext | string | `nil` | Specify a custom securityContext |
 | deployment.startupProbe | object | N/A | Override the settings for the default startup probe |
 | service.annotations | object | `{}` | Specify any additional annotations to add to the service |
 | service.name | string | `"namespaced-route-validator-service"` | Specify the name of the service |

@@ -17,6 +17,7 @@ You can customize the values of the helm deployment by using the following Value
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| deployment.containerSecurityContext | string | `nil` | Specify a custom container securityContext |
 | deployment.customLivenessProbe | object | `{}` | Specify a custom liveness probe |
 | deployment.customReadinessProbe | object | `{}` | Specify a custom readiness probe |
 | deployment.customStartupProbe | object | `{}` | Specify a custom startup probe |
@@ -27,6 +28,7 @@ You can customize the values of the helm deployment by using the following Value
 | deployment.logLevel | string | `"info"` | Specify the log level of the controller |
 | deployment.readinessProbe | object | N/A | Override the settings for the default readiness probe |
 | deployment.replicaCount | int | `1` | Specify the replica count for the deployment |
+| deployment.securityContext | string | `nil` | Specify a custom securityContext |
 | deployment.startupProbe | object | N/A | Override the settings for the default startup probe |
 | service.annotations | object | `{}` | Specify any additional annotations to add to the service |
 | service.name | string | `"namespaced-route-validator-service"` | Specify the name of the service |
