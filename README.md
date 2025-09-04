@@ -50,7 +50,6 @@ You can customize the values of the helm deployment by using the following Value
 Add the configured label to the namespace to enable the controller to enforce the hostname validation.  
 The default label is `enforce-route-check: "true"`
 
-### Label the target `namespace` (Optional)
 To override the subdomain being required, set the label configured in the values file to the subdomain. 
 By default the label is `route-validator.antware.xyz/subdomain`
 
