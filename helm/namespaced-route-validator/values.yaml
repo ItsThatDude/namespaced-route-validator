@@ -103,7 +103,7 @@ tls:
 # Webhook Configuration
 webhook:
   # -- Specify the name of the Webhook
-  name: namespaced-route-validator.openshift.io
+  name: route-validator.antware.xyz
 
   # -- Specify the failure policy
   failurePolicy: Fail

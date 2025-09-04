@@ -42,7 +42,7 @@ You can customize the values of the helm deployment by using the following Value
 | webhook.annotations | object | `{}` | Specify any additional annotations to add to the webhook |
 | webhook.caBundle | string | `""` | Specify the CA Bundle that signs the controller's certificate |
 | webhook.failurePolicy | string | `"Fail"` | Specify the failure policy |
-| webhook.name | string | `"namespaced-route-validator.openshift.io"` | Specify the name of the Webhook |
+| webhook.name | string | `"route-validator.antware.xyz"` | Specify the name of the Webhook |
 
 ## Usage
 
