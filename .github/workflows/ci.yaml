@@ -11,6 +11,7 @@ on:
       - pkg/**
       - go.mod
       - go.sum
+      - docker/controller.Dockerfile
 
 jobs:
   docker:

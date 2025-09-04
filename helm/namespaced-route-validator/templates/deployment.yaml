@@ -14,9 +14,13 @@ spec:
         app: route-validator
     spec:
       securityContext:
+        {{- if .Values.deployment.securityContext }}
+        {{- toYaml .Values.deployment.securityContext | nindent 8 }}
+        {{- else }}
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+        {{- end }}
       containers:
         - name: route-validator
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
@@ -64,6 +68,9 @@ spec:
             - name: LOG_LEVEL
               value: {{ .Values.deployment.logLevel | quote }}
           securityContext:
+            {{- if .Values.deployment.containerSecurityContext }}
+            {{- toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
+            {{- else }}
             allowPrivilegeEscalation: false
             runAsNonRoot: true
             capabilities:
@@ -71,6 +78,7 @@ spec:
                 - ALL
             seccompProfile:
               type: RuntimeDefault
+            {{- end }}
       serviceAccountName: route-validator
       volumes:
         - name: tls-certs

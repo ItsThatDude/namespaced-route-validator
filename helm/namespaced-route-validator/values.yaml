@@ -78,6 +78,12 @@ deployment:
   # -- Specify a custom startup probe
   customStartupProbe: {}
 
+  # -- Specify a custom securityContext
+  securityContext:
+
+  # -- Specify a custom container securityContext
+  containerSecurityContext:
+
 # Service Configuration
 service:
   # -- Specify the name of the service
