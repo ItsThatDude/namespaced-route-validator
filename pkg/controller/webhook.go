@@ -155,7 +155,12 @@ func validateObject[T any](
 		matchedDomain := v.MatchDomainFn(&obj, []string{host}, log)
 		if matchedDomain != "" {
 			domain := subdomainLabel + "." + matchedDomain
-			if !validateSubdomain(domain, host) {
+			log.Debugf("Evaluating host %s against domain %s", host, domain)
+			result := validateSubdomain(domain, host)
+			if result {
+				log.Debugf("Host %s is valid", host)
+			} else {
+				log.Debugf("Host %s is not valid", host)
 				return deny(fmt.Sprintf(
 					"%s %s host %s must be in the format *.%s",
 					v.Kind, req.Name, host, domain,
