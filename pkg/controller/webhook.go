@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 
 	routev1 "github.com/openshift/api/route/v1"
@@ -228,8 +229,14 @@ func routeMatchesAnyDomain(route *routev1.Route, matchDomains []string, log *zap
 }
 
 func matchHostToDomain(host string, domains []string) string {
+	// Sort domains by length (longest first) so more specific ones are checked first
+	sort.Slice(domains, func(i, j int) bool {
+		return len(domains[i]) > len(domains[j])
+	})
+
 	for _, domain := range domains {
-		if strings.HasSuffix(host, "."+domain) || strings.HasSuffix(host, domain) && strings.HasPrefix(domain, ".") {
+		if strings.HasSuffix(host, domain) {
+			// normalize return value to always include leading dot
 			if strings.HasPrefix(domain, ".") {
 				return domain
 			}
