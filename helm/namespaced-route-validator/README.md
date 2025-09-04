@@ -1,6 +1,6 @@
 # namespaced-route-validator
 
-![Version: 0.1.6](https://img.shields.io/badge/Version-0.1.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.3](https://img.shields.io/badge/AppVersion-0.1.3-informational?style=flat-square)
+![Version: 0.1.8](https://img.shields.io/badge/Version-0.1.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.4](https://img.shields.io/badge/AppVersion-0.1.4-informational?style=flat-square)
 
 A helm chart to deploy the Namespaced Route Validator
 
@@ -27,6 +27,7 @@ A helm chart to deploy the Namespaced Route Validator
 | tls.key | string | `""` | Specify a PEM encoded key to secure the controller |
 | validator.matchDomains | list | `[]` | This specifies which base domains the admission controller applies to |
 | validator.namespaceSelector | object | `{"matchLabels":{"enforce-route-check":"true"}}` | This specifies the namespace selector the admission controller applies to |
+| validator.subdomainLabel | string | `"route-validator.antware.xyz/subdomain"` | This specifies which label on the namespace to use as the required subdomain.<br /> If a blank string is provided, the validator will use the namespace as the required subdomain. |
 | validator.validateIngress | bool | `true` | Validate Ingress objects |
 | validator.validateRoutes | bool | `true` | Validate OpenShift/OKD Route objects |
 | webhook.annotations | object | `{}` | Specify any additional annotations to add to the webhook |

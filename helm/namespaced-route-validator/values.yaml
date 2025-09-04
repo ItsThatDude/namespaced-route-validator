@@ -13,6 +13,10 @@ validator:
   #   - key: tenant
   #     operator: Exists
 
+  # -- This specifies which label on the namespace to use as the required subdomain.<br />
+  # If a blank string is provided, the validator will use the namespace as the required subdomain.
+  subdomainLabel: "route-validator.antware.xyz/subdomain"
+
   # -- This specifies which base domains the admission controller applies to
   matchDomains: []
 

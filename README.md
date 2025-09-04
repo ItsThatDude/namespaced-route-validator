@@ -13,6 +13,8 @@ helm upgrade --install namespaced-route-validator itsthatdude/namespaced-route-v
 ```
 You can customize the values of the helm deployment by using the following Values:
 
+#### Values
+
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | deployment.customLivenessProbe | object | `{}` | Specify a custom liveness probe |
@@ -34,6 +36,7 @@ You can customize the values of the helm deployment by using the following Value
 | tls.key | string | `""` | Specify a PEM encoded key to secure the controller |
 | validator.matchDomains | list | `[]` | This specifies which base domains the admission controller applies to |
 | validator.namespaceSelector | object | `{"matchLabels":{"enforce-route-check":"true"}}` | This specifies the namespace selector the admission controller applies to |
+| validator.subdomainLabel | string | `"route-validator.antware.xyz/subdomain"` | This specifies which label on the namespace to use as the required subdomain.<br /> If a blank string is provided, the validator will use the namespace as the required subdomain. |
 | validator.validateIngress | bool | `true` | Validate Ingress objects |
 | validator.validateRoutes | bool | `true` | Validate OpenShift/OKD Route objects |
 | webhook.annotations | object | `{}` | Specify any additional annotations to add to the webhook |

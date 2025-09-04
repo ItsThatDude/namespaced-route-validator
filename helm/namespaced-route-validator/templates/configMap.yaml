@@ -9,3 +9,4 @@ data:
       {{- toYaml .Values.validator.namespaceSelector | nindent 6 }}
     matchDomains:
       {{- toYaml .Values.validator.matchDomains | nindent 6}}
+    subdomainLabel: {{ .Values.validator.subdomainLabel }}
