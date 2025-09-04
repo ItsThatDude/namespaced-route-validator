@@ -21,7 +21,7 @@ FROM alpine:3.18
 RUN apk --no-cache add ca-certificates
 
 # Create a non-root user for the app
-RUN adduser -D -g '' appuser
+RUN adduser --uid 1000 --disabled-password --gecos "" appuser
 
 # Create mount point for TLS certs
 RUN mkdir /certs
@@ -33,7 +33,7 @@ COPY --from=builder /app/controller /usr/local/bin/controller
 VOLUME ["/certs"]
 
 # Use non-root user
-USER appuser
+USER 1000
 
 EXPOSE 8443 8443
 
