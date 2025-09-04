@@ -46,6 +46,10 @@ You can customize the values of the helm deployment by using the following Value
 
 ## Usage
 
+### Set Values
+Make sure to set the `validator.matchDomains` setting in your values file. 
+If this is not set the validator will not reject any routes.
+
 ### Label the target `namespace`
 Add the configured label to the namespace to enable the controller to enforce the hostname validation.  
 The default label is `enforce-route-check: "true"`
