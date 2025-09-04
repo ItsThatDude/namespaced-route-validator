@@ -152,7 +152,7 @@ func validateObject[T any](
 	}
 
 	for _, host := range v.GetHostnamesFn(&obj) {
-		matchedDomain := v.MatchDomainFn(&obj, []string{host}, log)
+		matchedDomain := v.MatchDomainFn(&obj, cfg.MatchDomains, log)
 		if matchedDomain != "" {
 			domain := subdomainLabel + "." + matchedDomain
 			log.Debugf("Evaluating host %s against domain %s", host, domain)
