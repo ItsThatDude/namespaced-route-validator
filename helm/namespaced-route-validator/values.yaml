@@ -108,6 +108,9 @@ webhook:
   # -- Specify the failure policy
   failurePolicy: Fail
 
+  # -- Use CertManager to manage the webhook certificate
+  useCertManager: true
+
   # -- Specify the CA Bundle that signs the controller's certificate
   caBundle: ""
 

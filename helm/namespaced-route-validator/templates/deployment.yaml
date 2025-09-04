@@ -63,7 +63,7 @@ spec:
       volumes:
         - name: tls-certs
           secret:
-            secretName: {{ .Values.tls.existingSecret | default "route-validator-tls" }}
+            secretName: {{ .Values.tls.existingSecret | default "webhook-server-cert" }}
         - name: config
           configMap:
             name: route-validator-config

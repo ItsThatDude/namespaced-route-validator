@@ -1,0 +1,15 @@
+{{- if .Values.webhook.useCertManager }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: serving-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - {{ printf "%s.%s.svc" .Values.service.name .Release.Namespace }}
+  - {{ printf "%s.%s.svc.cluster.local" .Values.service.name .Release.Namespace }}
+  issuerRef:
+    kind: Issuer
+    name: selfsigned-issuer
+  secretName: webhook-server-cert
+{{- end }}

@@ -3,42 +3,17 @@ validator:
     matchLabels:
       enforce-route-check: 'true'
   matchDomains:
-    - apps.ocp.example.com
+    - apps.k8s.example.com
 deployment:
   replicaCount: 1
   image:
     pullPolicy: Always
     repository: itsthatdood/namespaced-route-validator
     tag: latest
-  logLevel: debug
 service:
-  annotations:
-    service.alpha.openshift.io/serving-cert-secret-name: route-validator-tls
-  name: namespaced-route-validator-service
+  name: route-validator-service
   port: 443
-tls:
-  existingSecret: route-validator-tls
 webhook:
   failurePolicy: Fail
-  name: namespaced-route-validator.openshift.io
-  caBundle: |
-    -----BEGIN CERTIFICATE-----
-    MIIDUTCCAjmgAwIBAgIIDE2UsO69WkIwDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
-    Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc1MzUwOTc5NDAe
-    Fw0yNTA3MjYwNjAzMTRaFw0yNzA5MjQwNjAzMTVaMDYxNDAyBgNVBAMMK29wZW5z
-    aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3NTM1MDk3OTQwggEiMA0GCSqG
-    SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDAEWuXpv7TEqjSuwKkWABLm51J+ONDvae7
-    OegJ4lbUO6/9SocwhPFdF9ZmVaGB33TYzxdpzNk5H51vTZyBAzBftSuqmLA11KDj
-    nLx98CXEowcyRHcEl0rKtWrzJuwQKZvbp7fqUHPWajeq4JYmkndhS94C5Z2o90sD
-    GKuRw7aRmUOr/GM7K6Yg3mhDQ1IyzrNyPdyTujD7O8hcpTmRrpMEfR9fN747Vo57
-    ulThRLpZCv9fUbFulzhYg/yv7IiEQlFRdKMbe1c5O+kdUrjPYypo1hEc9QN0ZBIq
-    sU74a2fBT/o72xnCdmjK+8XV14zmRKeP8VKGFx9g09bYkkuVVQ9ZAgMBAAGjYzBh
-    MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQT6N55
-    gngsSK/3rkaM0KAjVO77gTAfBgNVHSMEGDAWgBQT6N55gngsSK/3rkaM0KAjVO77
-    gTANBgkqhkiG9w0BAQsFAAOCAQEAVZodVRFt+UojCiVyhLbr5V6uva5kXNE3+Jqb
-    thB2vmK5GYRUSzAsOmDMKMBV9+tDnzCScRKC0XIE9N6VhxRGEwanu1x2sbMpWVHH
-    p6TapsVprXTIbL0XOYGLd7c/UvX0IL+IB91It23UIKpYwkcWj5wVIQctwEnDKsJw
-    B2Z3hrtR/39h584syorJ1VhGcanpb7RDHtOrIu1378ywpdTXoGYaq8Y/NjQofaRj
-    8DM+/nkvryXTp9yRtIELeGA1pS1dtjBkkXykq340ZJV8wm9LhCerFHCRkXO6IyMg
-    v8E0k2vLQ/8JXJ/tCMJ8agW9jbuC6RWSb4hQUcRLRkF61g28UQ==
-    -----END CERTIFICATE-----
+  name: route-validator.antware.xyz
+  useCertManager: true
