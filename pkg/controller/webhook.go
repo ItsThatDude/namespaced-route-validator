@@ -136,7 +136,9 @@ func validateObject[T any](
 	subdomainLabel := req.Namespace
 
 	if cfg.SubdomainLabel != "" {
-		subdomainLabel = ns.Labels[cfg.SubdomainLabel]
+		if val, ok := ns.Labels[cfg.SubdomainLabel]; ok {
+			subdomainLabel = val
+		}
 	}
 
 	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains, log) {
