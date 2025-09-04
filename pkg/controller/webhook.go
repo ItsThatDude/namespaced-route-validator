@@ -133,17 +133,17 @@ func validateObject[T any](
 		return allow()
 	}
 
+	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains, log) {
+		log.Debugf("Skipping %s/%s - Domain not a match", v.Kind, req.Name)
+		return allow()
+	}
+
 	subdomainLabel := req.Namespace
 
 	if cfg.SubdomainLabel != "" {
 		if val, ok := ns.Labels[cfg.SubdomainLabel]; ok {
 			subdomainLabel = val
 		}
-	}
-
-	if len(cfg.MatchDomains) > 0 && !v.MatchDomainFn(&obj, cfg.MatchDomains, log) {
-		log.Debugf("Skipping %s/%s - Domain not a match", v.Kind, req.Name)
-		return allow()
 	}
 
 	for _, host := range v.GetHostnamesFn(&obj) {
