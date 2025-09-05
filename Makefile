@@ -44,7 +44,7 @@ GO_LD_FLAGS = -X main.VERSION=$(VERSION)
 all: controller
 
 controller: $(GO_FILES)
-	$(GO) build -o $@ -installsuffix cgo $(GO_FLAGS) -ldflags "$(GO_LD_FLAGS)" ./cmd/controller
+	GOOS=$(2) CGO_ENABLED=0 $(GO) build -o $@ -installsuffix cgo $(GO_FLAGS) -ldflags "$(GO_LD_FLAGS)" ./cmd/controller
 
 test:
 	$(GOTESTSUM) $(GO_FLAGS) --junitfile report.xml --format testname -- "-coverprofile=coverage.out" $(GO_PACKAGES)
