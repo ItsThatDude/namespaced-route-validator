@@ -25,6 +25,11 @@ else
 VERSION := $(TAG)
 endif
 
+# Check for changed files
+ifneq ($(DIRTY),)
+VERSION := $(VERSION)+dirty
+endif
+
 CONTROLLER_IMAGE = $(REGISTRY)/itsthatdood/namespaced-route-validator
 ifneq ($(TAG),)
 CONTROLLER_IMAGE_TAGGED := $(CONTROLLER_IMAGE):$(VERSION)
@@ -33,11 +38,6 @@ CONTROLLER_IMAGE_LATEST = $(CONTROLLER_IMAGE):latest
 
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
-
-# Check for changed files
-ifneq ($(DIRTY),)
-VERSION := $(VERSION)+dirty
-endif
 
 GO_LD_FLAGS = -X main.VERSION=$(VERSION)
 
