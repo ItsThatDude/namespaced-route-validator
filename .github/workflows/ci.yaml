@@ -34,5 +34,4 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          make docker-build
           make docker-push
