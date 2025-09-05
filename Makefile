@@ -9,7 +9,6 @@ GO_FLAGS =
 
 DOCKER = docker
 REGISTRY ?= docker.io
-CONTROLLER_IMAGE = $(REGISTRY)/itsthatdood/namespaced-route-validator:latest
 INSECURE_REGISTRY = false
 
 GO_PACKAGES = ./...
@@ -26,6 +25,12 @@ else
 VERSION := $(TAG)
 endif
 
+CONTROLLER_IMAGE = $(REGISTRY)/itsthatdood/namespaced-route-validator
+ifneq ($(TAG),)
+CONTROLLER_IMAGE_TAGGED := $(CONTROLLER_IMAGE):$(VERSION)
+endif
+CONTROLLER_IMAGE_LATEST = $(CONTROLLER_IMAGE):latest
+
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
 
@@ -39,27 +44,7 @@ GO_LD_FLAGS = -X main.VERSION=$(VERSION)
 all: controller
 
 controller: $(GO_FILES)
-	$(GO) build -o $@ $(GO_FLAGS) -ldflags "$(GO_LD_FLAGS)" ./cmd/controller
-
-define binary
-$(1)-static-$(2)-$(3): $(GO_FILES)
-	GOOS=$(2) GOARCH=$(3) CGO_ENABLED=0 $(GO) build -o $$@ -installsuffix cgo $(GO_FLAGS) -ldflags "$(GO_LD_FLAGS)" ./cmd/$(1)
-endef
-
-define binaries
-$(call binary,controller,$1,$2)
-endef
-
-$(eval $(call binaries,linux,amd64))
-$(eval $(call binaries,linux,arm64))
-$(eval $(call binaries,linux,arm))
-$(eval $(call binaries,darwin,amd64))
-
-controller-static: controller-static-$(GOOS)-$(GOARCH)
-	cp $< $@
-
-controller.image: docker/controller.Dockerfile
-	$(DOCKER) build -f docker/controller.Dockerfile .
+	GOOS=$(2) GOARCH=$(3) CGO_ENABLED=0 $(GO) build -o $@ -installsuffix cgo $(GO_FLAGS) -ldflags "$(GO_LD_FLAGS)" ./cmd/controller
 
 test:
 	$(GOTESTSUM) $(GO_FLAGS) --junitfile report.xml --format testname -- "-coverprofile=coverage.out" $(GO_PACKAGES)
@@ -80,5 +65,14 @@ clean:
 	$(RM) controller.image*
 	$(RM) -r ./dist
 
-push-controller: clean controller.image
-	docker push $(CONTROLLER_IMAGE)
+docker-build: docker/controller.Dockerfile controller
+	mkdir -p dist
+	cp controller dist/
+	$(DOCKER) build -t $(CONTROLLER_IMAGE_LATEST) -f docker/controller.Dockerfile .
+
+docker-push: clean docker-build
+	if [ -n "$(TAG)" ]; then \
+		docker tag $(CONTROLLER_IMAGE_LATEST) $(CONTROLLER_IMAGE_TAGGED); \
+		docker push $(CONTROLLER_IMAGE_TAGGED); \
+	fi
+	docker push $(CONTROLLER_IMAGE_LATEST)

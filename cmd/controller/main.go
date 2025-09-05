@@ -4,7 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ItsThatDude/namespaced-route-validator/pkg/buildinfo"
 	"github.com/ItsThatDude/namespaced-route-validator/pkg/controller"
+)
+
+var (
+	// VERSION set from Makefile.
+	VERSION = buildinfo.DefaultVersion
 )
 
 func main() {
